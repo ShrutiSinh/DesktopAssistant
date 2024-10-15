@@ -1,8 +1,35 @@
 import os
 import openai
 from config import apikey
+import speech_recognition as sr
+import pyttsx3
+import webbrowser
+import datetime
 
 openai.api_key = apikey
+
+import pyaudio
+import wave
+
+def preprocess_audio(file_path):
+    chunk = 1024
+    wf = wave.open(file_path, 'rb')
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+
+    data = wf.readframes(chunk)
+
+    while data:
+        stream.write(data)
+        data = wf.readframes(chunk)
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
 
 response = openai.Completion.create(
   model="text-davinci-003",
@@ -13,6 +40,14 @@ response = openai.Completion.create(
   frequency_penalty=0,
   presence_penalty=0
 )
+
+import numpy as np
+import python_speech_features as psf
+
+def extract_features(audio_data, sample_rate):
+    mfcc_features = psf.mfcc(audio_data, samplerate=sample_rate, numcep=13)
+    return mfcc_features
+
 
 print(response)
 '''
